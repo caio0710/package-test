@@ -6,7 +6,8 @@
     "types": "dist/index.d.ts",
     "scripts": {
         "build": "tsc",
-        "deploy": "npm publish"
+        "deploy": "npm publish",
+        "test": "exit 0"
     },
     "keywords": [
         "typescript",
@@ -30,6 +31,6 @@
         "node": ">=8"
     },
     "publishConfig": {
-        "registry": "https://npm.pkg.github.com/@caio0710"
+        "@caio0710:registry": "https://npm.pkg.github.com"
     }
 }
