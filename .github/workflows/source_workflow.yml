@@ -37,8 +37,8 @@ jobs:
             token: ${{ secrets.PAT }}
             ref: main
 
-        - name: Create branch
-          run: git checkout -b update-version-${{ github.event.client_payload.version }}
+        # - name: Create branch
+        #   run: git checkout -b update-version-${{ github.event.client_payload.version }}
 
         - name: Use Node.js
           uses: actions/setup-node@v4
@@ -49,38 +49,24 @@ jobs:
         - name: Update the project version on package.json
           run: npm version ${{ github.event.client_payload.version }} --no-git-tag-version
 
-        - name: Commit changes in the main
-          run: |
-            git config user.name "Caio Villwock"
-            git config user.email caio_villwock@hotmail.com
-            git add *
-            git commit --message "[skip ci] ${{ github.event.client_payload.version }}"
-            git push origin update-version-${{ github.event.client_payload.version }}
-
-  create_pr_main:
-      runs-on: ubuntu-latest
-
-      needs:
-        - update_release
-        - fetch_release_info
-
-      steps:
-          - name: Checkout
-            uses: actions/checkout@v4
-            with:
-                token: ${{ secrets.PAT }}
-                ref: update-version-${{ github.event.client_payload.version }}
-                fetch-depth: 0
-
-          - name: Create Pull Request
-            uses: peter-evans/create-pull-request@v4
-            with:
-                token: ${{ secrets.PAT }}
-                author: Caio Villwock <caio_villwock@hotmail.com>
-                title: "Liberação da versão ${{ github.event.client_payload.version }}"
-                body: ${{ needs.fetch_release_info.outputs.releaseBody }}
-                branch: update-version-${{ github.event.client_payload.version }}
-                base: main
-                labels: |
-                    automated
-                    version release
+        # - name: Commit changes in the main
+        #   run: |
+        #     git config user.name "Caio Villwock"
+        #     git config user.email caio_villwock@hotmail.com
+        #     git add *
+        #     git commit --message "[skip ci] ${{ github.event.client_payload.version }}"
+        #     git push origin update-version-${{ github.event.client_payload.version }}
+        
+        - name: Create Pull Request
+          uses: peter-evans/create-pull-request@v4
+          with:
+            token: ${{ secrets.PAT }}
+            commit-message: Update system version to ${{ github.event.client_payload.version }}
+            committer: Caio Villwock <caio_villwock@hotmail.com>
+            author: Caio Villwock <caio_villwock@hotmail.com>
+            branch: update-version-${{ github.event.client_payload.version }}
+            title: "Liberação da versão ${{ github.event.client_payload.version }}"
+            body: ${{ needs.fetch_release_info.outputs.releaseBody }}
+            labels: |
+                automated
+                version release
