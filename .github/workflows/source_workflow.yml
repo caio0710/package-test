@@ -23,7 +23,7 @@ jobs:
 
       - name: readReleaseDescription
         id: releaseInfo
-        run: echo "body=$(cat release.json | jq .body)" >> $GITHUB_OUTPUT
+        run: echo "body=$(cat release.json | jq -r .body)" >> $GITHUB_OUTPUT
 
   update_release:
       runs-on: ubuntu-latest
@@ -66,8 +66,7 @@ jobs:
             author: Caio Villwock <caio_villwock@hotmail.com>
             branch: update-version-${{ github.event.client_payload.version }}
             title: "Liberação da versão ${{ github.event.client_payload.version }}"
-            body: |
-                ${{ needs.fetch_release_info.outputs.releaseBody }}
+            body: ${{ needs.fetch_release_info.outputs.releaseBody }}
             labels: |
                 automated
                 version release
