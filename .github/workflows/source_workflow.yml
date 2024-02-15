@@ -23,7 +23,7 @@ jobs:
 
       - name: readReleaseDescription
         id: releaseInfo
-        run: echo "::set-output name=body::$(cat release.json | jq .body)"
+        run: echo "body=$(cat release.json | jq .body)" >> $GITHUB_OUTPUT
 
   update_release:
       runs-on: ubuntu-latest
@@ -51,8 +51,9 @@ jobs:
 
         - name: Commit changes in the main
           run: |
-            git add package-lock.json
-            git add package.json
+            git config user.name "Caio Villwock"
+            git config user.email caio_villwock@hotmail.com
+            git add .
             git commit --message "[skip ci] ${{ github.event.client_payload.version }}"
             git push --set-upstream origin main
 
