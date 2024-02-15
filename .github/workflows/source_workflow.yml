@@ -12,7 +12,7 @@ jobs:
         releaseBody: ${{ steps.releaseInfo.outputs.body }}
 
     steps:
-      - name: Fetch Release data
+      - name: Fetch release data
         run: |
           curl -L \
           -H "Accept: application/vnd.github+json" \
@@ -21,9 +21,14 @@ jobs:
           https://api.github.com/repos/caio0710/versionamento/releases/tags/${{ github.event.client_payload.version }} \
           -o release.json
 
-      - name: readReleaseDescription
+      - name: Output release body
         id: releaseInfo
-        run: echo "body=$(cat release.json | jq -r .body)" >> $GITHUB_OUTPUT
+        run: |
+          {
+            echo 'body<<EOF'
+            cat release.json | jq -r .body
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
 
   update_release:
       runs-on: ubuntu-latest
