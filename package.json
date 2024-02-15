@@ -1,6 +1,6 @@
 {
     "name": "@caio0710/package-test",
-    "version": "0.4.4",
+    "version": "0.4.14",
     "description": "Teste de pacotes",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
