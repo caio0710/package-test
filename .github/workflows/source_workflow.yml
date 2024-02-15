@@ -1,37 +1,70 @@
 name: Trigger Target Workflow
 
 on:
-    repository_dispatch:
-        types: [new-release]
+  repository_dispatch:
+    types: [new-release]
 
 jobs:
-    update_release:
-        runs-on: ubuntu-latest
+  fetch_release_info:
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout na main
-              uses: actions/checkout@v4
-              with:
-                  token: ${{ secrets.PAT }}
-                  ref: main
+    outputs:
+        releaseBody: ${{ steps.releaseInfo.outputs.body }}
 
-            - name: Initialize git config
-              run: |
-                  git config user.name "Caio Villwock"
-                  git config user.email caio_villwock@hotmail.com
+    steps:
+      - name: Fetch Release data
+        run: |
+          curl -L \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ secrets.PAT }}" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/caio710/versionamento/releases/tags/v${{ github.event.client_payload.version }}
+          -o release.json
 
-            - name: Use Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 20.11.0
-                  cache: "npm"
+      - name: readReleaseDescription
+        id: releaseInfo
+        run: echo "::set-output name=body::$(cat release.json | jq .body)"
 
-            - name: Update the project version on package.json
-              run: npm version ${{ github.event.client_payload.version }} --no-git-tag-version
+  update_release:
+      runs-on: ubuntu-latest
 
-            - name: Commit changes in the main
-              run: |
-                  git add package-lock.json
-                  git add package.json
-                  git commit --message "[skip ci] ${{ github.event.client_payload.version }}"
-                  git push --set-upstream origin main
+      needs: fetch_release_info
+
+      steps:
+        - name: Checkout na main
+          uses: actions/checkout@v4
+          with:
+            token: ${{ secrets.PAT }}
+            ref: main
+
+        - name: Create branch
+          run: git checkout -b update-version-${{ github.event.client_payload.version }}
+
+        - name: Use Node.js
+          uses: actions/setup-node@v4
+          with:
+            node-version: 20.11.0
+            cache: "npm"
+
+        - name: Update the project version on package.json
+          run: npm version ${{ github.event.client_payload.version }} --no-git-tag-version
+
+        - name: Commit changes in the main
+          run: |
+            git add package-lock.json
+            git add package.json
+            git commit --message "[skip ci] ${{ github.event.client_payload.version }}"
+            git push --set-upstream origin main
+
+        - name: Create Pull Request
+          uses: peter-evans/create-pull-request@v4
+          with:
+            token: ${{ secrets.PAT }}
+            author: Caio Villwock <caio_villwock@hotmail.com>
+            title: "Liberação da versão ${{ github.event.client_payload.version }}"
+            body: ${{ needs.fetch_release_info.outputs.releaseBody }}
+            branch: release
+            base: main
+            labels: |
+                automated
+                version release
